@@ -63,7 +63,7 @@ def login():
         password = request.form['password']
 
         cur = mysql.connection.cursor()
-        cur.execute("SELECT * FROM users WHERE name = %s AND password = %s", (name, password))
+        cur.execute("SELECT * FROM users WHERE username = %s AND password = %s", (name, password))
         user = cur.fetchone()
         cur.close()
 
@@ -123,7 +123,6 @@ def logout():
     return redirect(url_for('index'))
 
 
-
 @app.route('/adduser')
 def addUser():
     return render_template('adduser.html')
@@ -141,6 +140,24 @@ def addnewuser():
     cur.close()
 
     return redirect(url_for('index'))
+
+
+@app.route('/visitors', methods=['GET', 'POST'])
+def visitors():
+
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM visitors")
+    visitors = cur.fetchall()
+    cur.close()
+
+
+    return render_template('visitors.html', visitors=visitors)
+
+
+@app.route('/addvisitor')
+def addVisitor():
+    return render_template('addvisitor.html')
+
 
 
 if __name__ == '__main__':
