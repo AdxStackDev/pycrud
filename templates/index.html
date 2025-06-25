@@ -10,11 +10,15 @@
 
         {% if session['login'] == True %}
             <h2 style="text-align: center;">Welcome {{ session['name'] }}</h2>
+            <a href="/logout" class="btn btn-danger">Logout</a>
+            <a href="/adduser" class="btn btn-success">Add New User</a>
+
 
             <table class="table table-bordered table-striped">
                 <thead>
                     <tr>
                         <th>ID</th>
+                        <th>Name</th>
                         <th>Username</th>
                         <th>Email</th>
                         <th>Actions</th>
@@ -27,6 +31,7 @@
                             <td>{{ user[0] }}</td>
                             <td>{{ user[1] }}</td>
                             <td>{{ user[2] }}</td>
+                            <td>{{ user[3] }}</td>                            
                             <td>
                                 <a href="/edit/{{ user[0] }}" class="btn btn-warning">Edit</a>
                                 <a href="/delete/{{ user[0] }}" class="btn btn-danger" onclick="return confirm('Are you sure?');">Delete</a>

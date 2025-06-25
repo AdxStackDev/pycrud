@@ -19,7 +19,7 @@ def index():
 
         # Fetch all users for the table
         cur = mysql.connection.cursor()
-        cur.execute("SELECT id, name, email FROM users")
+        cur.execute("SELECT * FROM users")
         users = cur.fetchall()
         cur.close()
 
@@ -28,8 +28,6 @@ def index():
 
     # Not logged in, redirect to login page
     return render_template('index.html')
-
-
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -57,7 +55,6 @@ def register():
     return render_template('register.html', message=message)
 
 
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     message = ''
@@ -80,23 +77,71 @@ def login():
         else:
             message = 'Bad username or password'
             return render_template('login.html', message=message)
-
+    
     return render_template('login.html')
+
 
 @app.route('/edit/<int:id>', methods=['GET', 'POST'])
 def editUser(id):
-    return render_template('edit.html')
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM users WHERE id = %s", (id,))
+    user = cur.fetchone()
+    cur.close()
+    return render_template('edit.html', user=user)
+
+
+@app.route('/update', methods=['GET','POST'])
+def updateUser():
+    if request.method == 'POST':
+        id          = request.form['id']
+        name        = request.form['name']
+        username    = request.form['username']
+        email       = request.form['email']
+        password    = request.form['password']
+
+        cur = mysql.connection.cursor()
+        cur.execute("UPDATE users SET name = %s, username = %s, email = %s, password = %s WHERE id = %s", (name, username, email, password, id))
+        mysql.connection.commit()
+        cur.close()
+
+        return redirect(url_for('editUser', id=id))
 
 
 @app.route('/delete/<int:id>', methods=['GET', 'POST'])
 def deleteUser(id):
-    return render_template('delete.html')
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM users WHERE id = %s", (id,))
+    mysql.connection.commit()
+    cur.close()
+    return redirect(url_for('index'))
+
 
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('index'))
+
+
+
+@app.route('/adduser')
+def addUser():
+    return render_template('adduser.html')
+
+@app.route('/insertnewuser', methods=['POST'])
+def addnewuser():
+    name        = request.form['name']
+    username    = request.form['username']
+    email       = request.form['email']
+    password    = request.form['password']
+
+    cur = mysql.connection.cursor()
+    cur.execute("INSERT INTO users(name, username, email, password) VALUES(%s, %s, %s, %s)", (name, username, email, password))
+    mysql.connection.commit()
+    cur.close()
+
+    return redirect(url_for('index'))
+
 
 if __name__ == '__main__':
     app.run(debug=True)
