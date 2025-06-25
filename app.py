@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session
+from flask import Flask, render_template, request, session, redirect, url_for
 from flask_mysqldb import MySQL
 
 app = Flask(__name__)
@@ -12,27 +12,25 @@ app.config['MYSQL_DB']          = 'flask_crud'
 
 mysql = MySQL(app)
 
-@app.route('/', methods = ['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def index():
+    # Check if user is logged in (avoid KeyError)
+    if session.get('login') == True:
 
-    # if session.get('login') == 'True':
+        # Fetch all users for the table
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT id, name, email FROM users")
+        users = cur.fetchall()
+        cur.close()
 
-    #     print(session.get('login'))
+        # Always render with users (even if empty)
+        return render_template('index.html', users=users)
 
-    #     userId = session.get('id')
-
-    #     cur = mysql.connection.cursor()
-    #     cur.execute("SELECT * FROM users WHERE id = %s", (userId,))
-    #     user = cur.fetchone()
-    #     cur.close()
-
-    #     if user:
-    #         return render_template('index.html', user=user)   
-
-    #     else:
-    #         return render_template('index.html')
-
+    # Not logged in, redirect to login page
     return render_template('index.html')
+
+
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -58,13 +56,14 @@ def register():
 
     return render_template('register.html', message=message)
 
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     message = ''
     if request.method == 'POST':
-
-        name        = request.form['username']
-        password    = request.form['password']
+        name     = request.form['username']
+        password = request.form['password']
 
         cur = mysql.connection.cursor()
         cur.execute("SELECT * FROM users WHERE name = %s AND password = %s", (name, password))
@@ -72,21 +71,32 @@ def login():
         cur.close()
 
         if user:
-
             session['name']  = user[1].upper()
             session['id']    = user[0]
-            session['login'] = True            
+            session['login'] = True
 
-            return render_template('index.html', user=user)
+            return redirect(url_for('index'))
+
         else:
             message = 'Bad username or password'
             return render_template('login.html', message=message)
 
     return render_template('login.html')
 
+@app.route('/edit/<int:id>', methods=['GET', 'POST'])
+def editUser(id):
+    return render_template('edit.html')
 
 
+@app.route('/delete/<int:id>', methods=['GET', 'POST'])
+def deleteUser(id):
+    return render_template('delete.html')
 
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(debug=True)
